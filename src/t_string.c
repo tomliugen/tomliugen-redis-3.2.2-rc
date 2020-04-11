@@ -154,19 +154,19 @@ void psetexCommand(client *c) {
     setGenericCommand(c,OBJ_SET_NO_FLAGS,c->argv[1],c->argv[3],c->argv[2],UNIT_MILLISECONDS,NULL,NULL);
 }
 
-// Í³Ò»µÄgetÃüÁîÖ´ÐÐ·½·¨
+// ç»Ÿä¸€çš„getå‘½ä»¤æ‰§è¡Œæ–¹æ³•
 int getGenericCommand(client *c) {
     robj *o;
-	// Èç¹û²éÎÞ´Ëkey£¬ÕâÀï·µ»Øok£¬²éÑ¯·½·¨ÄÚ²¿ÒÑ¾­°Ñ½á¹û·µ»Ø¡£
+	// å¦‚æžœæŸ¥æ— æ­¤keyï¼Œè¿™é‡Œè¿”å›žokï¼ŒæŸ¥è¯¢æ–¹æ³•å†…éƒ¨å·²ç»æŠŠç»“æžœè¿”å›žã€‚
     if ((o = lookupKeyReadOrReply(c,c->argv[1],shared.nullbulk)) == NULL)
         return C_OK;
 
-	// ÀàÐÍ²»ÊÇstring£¬±¨´í¡£
+	// ç±»åž‹ä¸æ˜¯stringï¼ŒæŠ¥é”™ã€‚
     if (o->type != OBJ_STRING) {
         addReply(c,shared.wrongtypeerr);
         return C_ERR;
     } else {
-    	// °Ñ²éÑ¯µ½µÄ½á¹û·µ»Ø¸ø¿Í»§¶Ë
+    	// æŠŠæŸ¥è¯¢åˆ°çš„ç»“æžœè¿”å›žç»™å®¢æˆ·ç«¯
         addReplyBulk(c,o);
         return C_OK;
     }

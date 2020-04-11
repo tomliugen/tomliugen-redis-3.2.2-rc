@@ -461,25 +461,25 @@ typedef long long mstime_t; /* millisecond time type. */
 #define LRU_CLOCK_MAX ((1<<LRU_BITS)-1) /* Max value of obj->lru */
 #define LRU_CLOCK_RESOLUTION 1000 /* LRU clock resolution in ms */
 typedef struct redisObject {
-    unsigned type:4;   // ÀàĞÍ£¬²Î¼ûOBJ_STRINGµÈºê¶¨Òå
-    unsigned encoding:4; // ±àÂëÀàĞÍ£¬²Î¼ûOBJ_ENCODING_RAWµÈºê¶¨Òå
-    unsigned lru:LRU_BITS; /* lru time (relative to server.lruclock) */  // ×î½ü·ÃÎÊÊ±¼ä£¬24Î»
-    int refcount; // ÒıÓÃ¼ÆÊı
-    void *ptr;   // Ö¸ÏòÊµ¼Ê¶ÔÏóµÄÖ¸Õë
+    unsigned type:4;   // ç±»å‹ï¼Œå‚è§OBJ_STRINGç­‰å®å®šä¹‰
+    unsigned encoding:4; // ç¼–ç ç±»å‹ï¼Œå‚è§OBJ_ENCODING_RAWç­‰å®å®šä¹‰
+    unsigned lru:LRU_BITS; /* lru time (relative to server.lruclock) */  // æœ€è¿‘è®¿é—®æ—¶é—´ï¼Œ24ä½
+    int refcount; // å¼•ç”¨è®¡æ•°
+    void *ptr;   // æŒ‡å‘å®é™…å¯¹è±¡çš„æŒ‡é’ˆ
 } robj;
 
-// ÔÚÕâÀïserver.hz´ú±í·şÎñÆ÷Ã¿ÃëË¢ĞÂLRUÊ±¼äµÄ´ÎÊı£¬1000/server.hzÊÇ·şÎñÆ÷Ë¢ĞÂLRUÊ±¼äµÄ¾«¶ÈÖµ£¨Ê±¼ä¼ä¸ô£©£¬
-// ¸Ãºê¶¨ÒåµÄÒâË¼ÊÇÈç¹û·şÎñÆ÷µÄÔ¤ÏÈ¼ÆËãµÄLRUÊ±¼ä¾«¶ÈÖµ±ÈLRU¶¨Òå±¾ÉíµÄ¾«¶ÈÖµÒªĞ¡£¨¾«¶ÈÖµ±íÊ¾Ò»´ÎË¢ĞÂµÄ¼ä¸ôÊ±¼ä£¬
-// ÖµÔ½Ğ¡Ôò¾«¶ÈÔ½¸ß£©£¬ËµÃ÷·şÎñÆ÷Ô¤ÏÈ¼ÆËãµÄÖµ×¼È·¶È¸ü¸ß£¬¿ÉÒÔÖ±½ÓÓÃ·şÎñÆ÷Ô¤ÏÈ¼ÆËãºÃµÄLRUÊ±¼ä¡£
-// ¾ÙÀıÔÚµ±Ç°°æ±¾ÖĞ£¬·şÎñÆ÷Ä¬ÈÏÖµ¾«¶ÈÊÇ100ms£¬ LRU¶¨Òå±¾ÉíµÄ¾«¶ÈÊÇ1000ms£¬¼ÈÈ»·şÎñÆ÷Ô¤ÏÈ¼ÆËãºÃµÄLRU¸ü¼Ó×¼È·£¬
-// Ôò²»±Øµ÷ÓÃgetLRUCLOCK()º¯ÊıÔö¼Ó¶îÍâµÄ¿ªÏú¡£
+// åœ¨è¿™é‡Œserver.hzä»£è¡¨æœåŠ¡å™¨æ¯ç§’åˆ·æ–°LRUæ—¶é—´çš„æ¬¡æ•°ï¼Œ1000/server.hzæ˜¯æœåŠ¡å™¨åˆ·æ–°LRUæ—¶é—´çš„ç²¾åº¦å€¼ï¼ˆæ—¶é—´é—´éš”ï¼‰ï¼Œ
+// è¯¥å®å®šä¹‰çš„æ„æ€æ˜¯å¦‚æœæœåŠ¡å™¨çš„é¢„å…ˆè®¡ç®—çš„LRUæ—¶é—´ç²¾åº¦å€¼æ¯”LRUå®šä¹‰æœ¬èº«çš„ç²¾åº¦å€¼è¦å°ï¼ˆç²¾åº¦å€¼è¡¨ç¤ºä¸€æ¬¡åˆ·æ–°çš„é—´éš”æ—¶é—´ï¼Œ
+// å€¼è¶Šå°åˆ™ç²¾åº¦è¶Šé«˜ï¼‰ï¼Œè¯´æ˜æœåŠ¡å™¨é¢„å…ˆè®¡ç®—çš„å€¼å‡†ç¡®åº¦æ›´é«˜ï¼Œå¯ä»¥ç›´æ¥ç”¨æœåŠ¡å™¨é¢„å…ˆè®¡ç®—å¥½çš„LRUæ—¶é—´ã€‚
+// ä¸¾ä¾‹åœ¨å½“å‰ç‰ˆæœ¬ä¸­ï¼ŒæœåŠ¡å™¨é»˜è®¤å€¼ç²¾åº¦æ˜¯100msï¼Œ LRUå®šä¹‰æœ¬èº«çš„ç²¾åº¦æ˜¯1000msï¼Œæ—¢ç„¶æœåŠ¡å™¨é¢„å…ˆè®¡ç®—å¥½çš„LRUæ›´åŠ å‡†ç¡®ï¼Œ
+// åˆ™ä¸å¿…è°ƒç”¨getLRUCLOCK()å‡½æ•°å¢åŠ é¢å¤–çš„å¼€é”€ã€‚
 /* Macro used to obtain the current LRU clock.
  * If the current resolution is lower than the frequency we refresh the
  * LRU clock (as it should be in production servers) we return the
  * precomputed value, otherwise we need to resort to a system call. */
 #define LRU_CLOCK() ((1000/server.hz <= LRU_CLOCK_RESOLUTION) ? server.lruclock : getLRUClock())
 
-// ³õÊ¼»¯StringÀàĞÍµÄ¶ÔÏó
+// åˆå§‹åŒ–Stringç±»å‹çš„å¯¹è±¡
 /* Macro used to initialize a Redis object allocated on the stack.
  * Note that this macro is taken near the structure definition to make sure
  * we'll update it when the structure is changed, to avoid bugs like
@@ -491,7 +491,7 @@ typedef struct redisObject {
     _var.ptr = _ptr; \
 } while(0)
 
-// ÎªÁË¸ÄÉÆLRUµÄ¾«¶È£¬ÕâÀïÔ¤ÏÈ´æÁËÒ»Åú´ıÉ¾³ıµÄºòÑ¡key
+// ä¸ºäº†æ”¹å–„LRUçš„ç²¾åº¦ï¼Œè¿™é‡Œé¢„å…ˆå­˜äº†ä¸€æ‰¹å¾…åˆ é™¤çš„å€™é€‰key
 /* To improve the quality of the LRU approximation we take a set of keys
  * that are good candidate for eviction across freeMemoryIfNeeded() calls.
  *
@@ -505,8 +505,8 @@ struct evictionPoolEntry {
     sds key;                    /* Key name. */
 };
 
-// redisÊı¾İ¿âµÄ¶¨Òå, ÕâÀï¿ÉÒÔÓĞ¶à¸öÊı¾İ¿â£¬Ê¹ÓÃintĞÍµÄÖµÀ´±êÊ¶£¬´Ó0¿ªÊ¼£¬µ½×î´óµÄÅäÖÃÖµ
-// redisDb½á¹¹ÖĞµÄ"id"±íÊ¾µ±Ç°Êı¾İ¿âµÄÊıÖµ¡£
+// redisæ•°æ®åº“çš„å®šä¹‰, è¿™é‡Œå¯ä»¥æœ‰å¤šä¸ªæ•°æ®åº“ï¼Œä½¿ç”¨intå‹çš„å€¼æ¥æ ‡è¯†ï¼Œä»0å¼€å§‹ï¼Œåˆ°æœ€å¤§çš„é…ç½®å€¼
+// redisDbç»“æ„ä¸­çš„"id"è¡¨ç¤ºå½“å‰æ•°æ®åº“çš„æ•°å€¼ã€‚
 /* Redis database representation. There are multiple databases identified
  * by integers from 0 (the default database) up to the max configured
  * database. The database number is the 'id' field in the structure. */
@@ -521,7 +521,7 @@ typedef struct redisDb {
     long long avg_ttl;          /* Average TTL, just for stats */
 } redisDb;
 
-// Ö´ĞĞ¿Í»§¶ËÃüÁîµÄ½á¹¹¶¨Òå
+// æ‰§è¡Œå®¢æˆ·ç«¯å‘½ä»¤çš„ç»“æ„å®šä¹‰
 /* Client MULTI/EXEC state */
 typedef struct multiCmd {
     robj **argv;
@@ -570,7 +570,7 @@ typedef struct readyList {
     robj *key;
 } readyList;
 
-// redisµÄÄÚ²¿ÊµÏÖÊÇ¶àÂ·¸´ÓÃ£¬Òò´ËĞèÒª¼ÇÂ¼Ã¿¸ö¿Í»§¶ËÇëÇóµÄĞÅÏ¢¡£
+// redisçš„å†…éƒ¨å®ç°æ˜¯å¤šè·¯å¤ç”¨ï¼Œå› æ­¤éœ€è¦è®°å½•æ¯ä¸ªå®¢æˆ·ç«¯è¯·æ±‚çš„ä¿¡æ¯ã€‚
 /* With multiplexing we need to take per-client state.
  * Clients are taken in a linked list. */
 typedef struct client {
@@ -1495,9 +1495,9 @@ void setCommand(client *c);
 void setnxCommand(client *c);
 void setexCommand(client *c);
 void psetexCommand(client *c);
-// getÃüÁî¶ÔÓ¦µÄ½Ó¿Ú
+// getå‘½ä»¤å¯¹åº”çš„æ¥å£
 void getCommand(client *c);
-// delÃüÁî¶ÔÓ¦µÄ½Ó¿Ú
+// delå‘½ä»¤å¯¹åº”çš„æ¥å£
 void delCommand(client *c);
 void existsCommand(client *c);
 void setbitCommand(client *c);

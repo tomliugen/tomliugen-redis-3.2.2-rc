@@ -496,23 +496,22 @@ dictEntry *dictFind(dict *d, const void *key)
 
     if (d->ht[0].used + d->ht[1].used == 0) return NULL; /* dict is empty */
     if (dictIsRehashing(d)) _dictRehashStep(d);
-	// ¼ÆËãhashÖµ
+	// è®¡ç®—hashå€¼
     h = dictHashKey(d, key);
     for (table = 0; table <= 1; table++) {
-		// ¶¨Î»tableµÄindexÖµ
+		// å®šä½tableçš„indexå€¼
         idx = h & d->ht[table].sizemask;
         he = d->ht[table].table[idx];
         while(he) {
-			// ±éÀú±È½Ïkey£¬keyµÄÖ¸ÕëÖµÏàÍ¬£¬»òÕßkeyÖ¸ÏòµÄ¶ÔÏóÏàÍ¬
-			// dictCompareKeysÊÇÒ»¸öºê¶¨Òå£¬¸ù¾İ²»Í¬µÄÀàĞÍ×ö±È½Ï£¬
-			// ¾ßÌåÀàĞÍµÄ±È½Ï¼ûServer.cÖĞcommandTableDictType(sdsÀàĞÍ)µÈ¶¨Òå
+			// éå†æ¯”è¾ƒkeyï¼Œkeyçš„æŒ‡é’ˆå€¼ç›¸åŒï¼Œæˆ–è€…keyæŒ‡å‘çš„å¯¹è±¡ç›¸åŒ
+			// dictCompareKeysæ˜¯ä¸€ä¸ªå®å®šä¹‰ï¼Œæ ¹æ®ä¸åŒçš„ç±»å‹åšæ¯”è¾ƒï¼Œ
+			// å…·ä½“ç±»å‹çš„æ¯”è¾ƒè§Server.cä¸­commandTableDictType(sdsç±»å‹)ç­‰å®šä¹‰
             if (key==he->key || dictCompareKeys(d, key, he->key))
                 return he;
             he = he->next;
         }
-		// ±éÀúºó·¢ÏÖÎŞ´Ëkey£¬ÇÒµ±Ç°×ÖµäÎ´½øĞĞrehash²Ù×÷£¬ËµÃ÷È·ÊµÎŞ´Ëkey£¬·µ»ØNULL¡£
-		// ·ñÔòĞèÒª±éÀú×ÖµäµÄÁíÍâÒ»¸ötable£¬µ«ÊÇÎªÊ²Ã´Ã»ÓĞÖ±½Ó±éÀú·ÇrehashµÄtableÄØå
-        if (!dictIsRehashing(d)) return NULL;
+		// éå†åå‘ç°æ— æ­¤keyï¼Œä¸”å½“å‰å­—å…¸æœªè¿›è¡Œrehashæ“ä½œï¼Œè¯´æ˜ç¡®å®æ— æ­¤keyï¼Œè¿”å›NULLã€‚
+		// å¦åˆ™éœ€è¦éå†å­—å…¸çš„å¦å¤–ä¸€ä¸ªtableï¼Œä½†æ˜¯ä¸ºä»€ä¹ˆæ²¡æœ‰ç›´æ¥éå†érehashçš„tableå‘¢?        if (!dictIsRehashing(d)) return NULL;
     }
     return NULL;
 }

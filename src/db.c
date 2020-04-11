@@ -48,7 +48,7 @@ robj *lookupKey(redisDb *db, robj *key, int flags) {
     dictEntry *de = dictFind(db->dict,key->ptr);
     if (de) {
         robj *val = dictGetVal(de);
-		// ³ı·ÇÕıÔÚÖ´ĞĞrdb»òÕßaofÃüÁî£¬»òÕßÉèÖÃÁËLOOKUP_NOTOUCH£¬·ñÔòÒª¸üĞÂ¶ÔÏóµÄlru×Ö¶Î¡£
+		// é™¤éæ­£åœ¨æ‰§è¡Œrdbæˆ–è€…aofå‘½ä»¤ï¼Œæˆ–è€…è®¾ç½®äº†LOOKUP_NOTOUCHï¼Œå¦åˆ™è¦æ›´æ–°å¯¹è±¡çš„lruå­—æ®µã€‚
         /* Update the access time for the ageing algorithm.
          * Don't do it if we have a saving child, as this will trigger
          * a copy on write madness. */
@@ -65,22 +65,22 @@ robj *lookupKey(redisDb *db, robj *key, int flags) {
 }
 
 /*
-    ²éÑ¯·½·¨£¬Èç¹û²éÎŞ´Ëkey£¬·µ»Ønull¡£
-    ÔÚÕâ¸ö·½·¨ÄÚ£¬»¹»á×öÈı¼şÊÂ:
-    1. ¼ì²éÒ»¸ökeyÊÇ·ñ¹ıÆÚ¡£
-    2. ¸üĞÂ×î½ü·ÃÎÊÊ±¼ä¡£
-    3. ¸üĞÂÈ«¾ÖµÄ½¡Öµ·ÃÎÊµÄÃüÖĞÊı/¶ªÊ§Êı¡£
+    æŸ¥è¯¢æ–¹æ³•ï¼Œå¦‚æœæŸ¥æ— æ­¤keyï¼Œè¿”å›nullã€‚
+    åœ¨è¿™ä¸ªæ–¹æ³•å†…ï¼Œè¿˜ä¼šåšä¸‰ä»¶äº‹:
+    1. æ£€æŸ¥ä¸€ä¸ªkeyæ˜¯å¦è¿‡æœŸã€‚
+    2. æ›´æ–°æœ€è¿‘è®¿é—®æ—¶é—´ã€‚
+    3. æ›´æ–°å…¨å±€çš„å¥å€¼è®¿é—®çš„å‘½ä¸­æ•°/ä¸¢å¤±æ•°ã€‚
 
-    ¸Ã·½·¨½öÓÃÀ´²éÑ¯£¬²»Ó¦¸ÃÓÃÔÚĞ´Èë²Ù×÷Ç°µÄ²éÑ¯ÉÏ¡£
+    è¯¥æ–¹æ³•ä»…ç”¨æ¥æŸ¥è¯¢ï¼Œä¸åº”è¯¥ç”¨åœ¨å†™å…¥æ“ä½œå‰çš„æŸ¥è¯¢ä¸Šã€‚
 
-    Flags²ÎÊı:
-    LOOKUP_NONE: Î´ÉèÖÃflags¡£
-    LOOKUP_NOTOUCH: ¶Ôµ±Ç°key£¬²»Òª¸üĞÂ×î½ü·ÃÎÊÊ±¼ä¡£
+    Flagså‚æ•°:
+    LOOKUP_NONE: æœªè®¾ç½®flagsã€‚
+    LOOKUP_NOTOUCH: å¯¹å½“å‰keyï¼Œä¸è¦æ›´æ–°æœ€è¿‘è®¿é—®æ—¶é—´ã€‚
 
-    ×¢Òâ:
-    ¶ÔÓÚÒ»¸ö¹ıÆÚµÄkey£¬¸Ã·½·¨¶¼»á·µ»ØNULL£¬²»Í¬µÄÊÇ:
-    1. Èç¹û·ÃÎÊµÄÊÇÖ÷½Úµã£¬»áÉ¾³ı¸Ãkey£»
-    2. Èç¹û·ÃÎÊµÄÊÇ´Ó½Úµã£¬²»»áÖ´ĞĞÉ¾³ı£¬µÈ´ıÍ¬²½Ö÷½ÚµãµÄÉ¾³ıÃüÁîÊ±£¬ÔÙ°Ñ¸ÃkeyÉ¾³ı¡£
+    æ³¨æ„:
+    å¯¹äºä¸€ä¸ªè¿‡æœŸçš„keyï¼Œè¯¥æ–¹æ³•éƒ½ä¼šè¿”å›NULLï¼Œä¸åŒçš„æ˜¯:
+    1. å¦‚æœè®¿é—®çš„æ˜¯ä¸»èŠ‚ç‚¹ï¼Œä¼šåˆ é™¤è¯¥keyï¼›
+    2. å¦‚æœè®¿é—®çš„æ˜¯ä»èŠ‚ç‚¹ï¼Œä¸ä¼šæ‰§è¡Œåˆ é™¤ï¼Œç­‰å¾…åŒæ­¥ä¸»èŠ‚ç‚¹çš„åˆ é™¤å‘½ä»¤æ—¶ï¼Œå†æŠŠè¯¥keyåˆ é™¤ã€‚
 */
 /* Lookup a key for read operations, or return NULL if the key is not found
  * in the specified DB.
@@ -105,18 +105,18 @@ robj *lookupKey(redisDb *db, robj *key, int flags) {
  * expiring our key via DELs in the replication link. */
 robj *lookupKeyReadWithFlags(redisDb *db, robj *key, int flags) {
     robj *val;
-	// Ê×ÏÈ¼ì²ékeyÊÇ·ñ¹ıÆÚ
+	// é¦–å…ˆæ£€æŸ¥keyæ˜¯å¦è¿‡æœŸ
     if (expireIfNeeded(db,key) == 1) {
         /* Key expired. If we are in the context of a master, expireIfNeeded()
          * returns 0 only when the key does not exist at all, so it's save
          * to return NULL ASAP. */
-         // key¹ıÆÚÁË£¬ÇÒÊÇÖ÷½Úµã£¬·µ»ØNULL£»
+         // keyè¿‡æœŸäº†ï¼Œä¸”æ˜¯ä¸»èŠ‚ç‚¹ï¼Œè¿”å›NULLï¼›
         if (server.masterhost == NULL) return NULL;
 
-		/* Èç¹ûµ±Ç°½ÚµãÊÇ´Ó½Úµã£¬expireIfNeeded()·½·¨²»»áÈ¥³¢ÊÔÉ¾³ıÕâ¸ö¹ıÆÚkey,
-		   ½ö½ö·µ»Ø¹ıÆÚµÄ×´Ì¬£¬´Ó½ÚµãµÄÉ¾³ıÒÀÀµÍ¬²½Ö÷½ÚµãµÄÉ¾³ıÃüÁî£¬ÕâÑù¿ÉÒÔ±£³ÖºÍÖ÷½ÚµãÒ»ÖÂĞÔ¡£
-		   µ±È»£¬ÔÚ´Ó½ÚµãÖ´ĞĞ²éÑ¯ÃüÁî£¬Èç¹û¸ÃÇëÇó²»ÊÇÖ÷½Úµã·¢Æğ£¬ÇÒÊÇÖ»¶ÁµÄÃüÁî£¬
-		   Ò²ÊÇ»á·µ»ØNULL£¬ÕâÒ²ÊÇÎªÁËÌá¹©¶à¿Í»§¶Ë·ÃÎÊ¹ıÆÚkeyµÄÒ»ÖÂĞÔÊÓÍ¼£¬
+		/* å¦‚æœå½“å‰èŠ‚ç‚¹æ˜¯ä»èŠ‚ç‚¹ï¼ŒexpireIfNeeded()æ–¹æ³•ä¸ä¼šå»å°è¯•åˆ é™¤è¿™ä¸ªè¿‡æœŸkey,
+		   ä»…ä»…è¿”å›è¿‡æœŸçš„çŠ¶æ€ï¼Œä»èŠ‚ç‚¹çš„åˆ é™¤ä¾èµ–åŒæ­¥ä¸»èŠ‚ç‚¹çš„åˆ é™¤å‘½ä»¤ï¼Œè¿™æ ·å¯ä»¥ä¿æŒå’Œä¸»èŠ‚ç‚¹ä¸€è‡´æ€§ã€‚
+		   å½“ç„¶ï¼Œåœ¨ä»èŠ‚ç‚¹æ‰§è¡ŒæŸ¥è¯¢å‘½ä»¤ï¼Œå¦‚æœè¯¥è¯·æ±‚ä¸æ˜¯ä¸»èŠ‚ç‚¹å‘èµ·ï¼Œä¸”æ˜¯åªè¯»çš„å‘½ä»¤ï¼Œ
+		   ä¹Ÿæ˜¯ä¼šè¿”å›NULLï¼Œè¿™ä¹Ÿæ˜¯ä¸ºäº†æä¾›å¤šå®¢æˆ·ç«¯è®¿é—®è¿‡æœŸkeyçš„ä¸€è‡´æ€§è§†å›¾ï¼Œ
 		   
 		*/
         /* However if we are in the context of a slave, expireIfNeeded() will
@@ -139,7 +139,7 @@ robj *lookupKeyReadWithFlags(redisDb *db, robj *key, int flags) {
             return NULL;
         }
     }
-	// ²éÑ¯key£¬²¢¸üĞÂ·ÃÎÊ¼ÆÊı
+	// æŸ¥è¯¢keyï¼Œå¹¶æ›´æ–°è®¿é—®è®¡æ•°
     val = lookupKey(db,key,flags);
     if (val == NULL)
         server.stat_keyspace_misses++;
@@ -164,7 +164,7 @@ robj *lookupKeyWrite(redisDb *db, robj *key) {
     return lookupKey(db,key,LOOKUP_NONE);
 }
 
-// ²éÑ¯·½·¨(Èç¹û²éÎŞ´Ëkey£¬»áÖ±½Ó°Ñ½á¹û·µ»Ø¸ø¿Í»§¶Ë)
+// æŸ¥è¯¢æ–¹æ³•(å¦‚æœæŸ¥æ— æ­¤keyï¼Œä¼šç›´æ¥æŠŠç»“æœè¿”å›ç»™å®¢æˆ·ç«¯)
 robj *lookupKeyReadOrReply(client *c, robj *key, robj *reply) {
     robj *o = lookupKeyRead(c->db, key);
     if (!o) addReply(c,reply);
