@@ -461,19 +461,25 @@ typedef long long mstime_t; /* millisecond time type. */
 #define LRU_CLOCK_MAX ((1<<LRU_BITS)-1) /* Max value of obj->lru */
 #define LRU_CLOCK_RESOLUTION 1000 /* LRU clock resolution in ms */
 typedef struct redisObject {
-    unsigned type:4;
-    unsigned encoding:4;
-    unsigned lru:LRU_BITS; /* lru time (relative to server.lruclock) */
-    int refcount;
-    void *ptr;
+    unsigned type:4;   // 类型，参见OBJ_STRING等宏定义
+    unsigned encoding:4; // 编码类型，参见OBJ_ENCODING_RAW等宏定义
+    unsigned lru:LRU_BITS; /* lru time (relative to server.lruclock) */  // 最近访问时间，24位
+    int refcount; // 引用计数
+    void *ptr;   // 指向实际对象的指针
 } robj;
 
+// 在这里server.hz代表服务器每秒刷新LRU时间的次数，1000/server.hz是服务器刷新LRU时间的精度值（时间间隔），
+// 该宏定义的意思是如果服务器的预先计算的LRU时间精度值比LRU定义本身的精度值要小（精度值表示一次刷新的间隔时间，
+// 值越小则精度越高），说明服务器预先计算的值准确度更高，可以直接用服务器预先计算好的LRU时间。
+// 举例在当前版本中，服务器默认值精度是100ms， LRU定义本身的精度是1000ms，既然服务器预先计算好的LRU更加准确，
+// 则不必调用getLRUCLOCK()函数增加额外的开销。
 /* Macro used to obtain the current LRU clock.
  * If the current resolution is lower than the frequency we refresh the
  * LRU clock (as it should be in production servers) we return the
  * precomputed value, otherwise we need to resort to a system call. */
 #define LRU_CLOCK() ((1000/server.hz <= LRU_CLOCK_RESOLUTION) ? server.lruclock : getLRUClock())
 
+// 初始化String类型的对象
 /* Macro used to initialize a Redis object allocated on the stack.
  * Note that this macro is taken near the structure definition to make sure
  * we'll update it when the structure is changed, to avoid bugs like
@@ -485,6 +491,7 @@ typedef struct redisObject {
     _var.ptr = _ptr; \
 } while(0)
 
+// 为了改善LRU的精度，这里预先存了一批待删除的候选key
 /* To improve the quality of the LRU approximation we take a set of keys
  * that are good candidate for eviction across freeMemoryIfNeeded() calls.
  *
@@ -498,6 +505,8 @@ struct evictionPoolEntry {
     sds key;                    /* Key name. */
 };
 
+// redis数据库的定义, 这里可以有多个数据库，使用int型的值来标识，从0开始，到最大的配置值
+// redisDb结构中的"id"表示当前数据库的数值。
 /* Redis database representation. There are multiple databases identified
  * by integers from 0 (the default database) up to the max configured
  * database. The database number is the 'id' field in the structure. */
@@ -512,6 +521,7 @@ typedef struct redisDb {
     long long avg_ttl;          /* Average TTL, just for stats */
 } redisDb;
 
+// 执行客户端命令的结构定义
 /* Client MULTI/EXEC state */
 typedef struct multiCmd {
     robj **argv;
@@ -560,6 +570,7 @@ typedef struct readyList {
     robj *key;
 } readyList;
 
+// redis的内部实现是多路复用，因此需要记录每个客户端请求的信息。
 /* With multiplexing we need to take per-client state.
  * Clients are taken in a linked list. */
 typedef struct client {
@@ -1484,7 +1495,9 @@ void setCommand(client *c);
 void setnxCommand(client *c);
 void setexCommand(client *c);
 void psetexCommand(client *c);
+// get命令对应的接口
 void getCommand(client *c);
+// del命令对应的接口
 void delCommand(client *c);
 void existsCommand(client *c);
 void setbitCommand(client *c);

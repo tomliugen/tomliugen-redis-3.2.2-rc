@@ -496,15 +496,22 @@ dictEntry *dictFind(dict *d, const void *key)
 
     if (d->ht[0].used + d->ht[1].used == 0) return NULL; /* dict is empty */
     if (dictIsRehashing(d)) _dictRehashStep(d);
+	// ¼ÆËãhashÖµ
     h = dictHashKey(d, key);
     for (table = 0; table <= 1; table++) {
+		// ¶¨Î»tableµÄindexÖµ
         idx = h & d->ht[table].sizemask;
         he = d->ht[table].table[idx];
         while(he) {
+			// ±éÀú±È½Ïkey£¬keyµÄÖ¸ÕëÖµÏàÍ¬£¬»òÕßkeyÖ¸ÏòµÄ¶ÔÏóÏàÍ¬
+			// dictCompareKeysÊÇÒ»¸öºê¶¨Òå£¬¸ù¾İ²»Í¬µÄÀàĞÍ×ö±È½Ï£¬
+			// ¾ßÌåÀàĞÍµÄ±È½Ï¼ûServer.cÖĞcommandTableDictType(sdsÀàĞÍ)µÈ¶¨Òå
             if (key==he->key || dictCompareKeys(d, key, he->key))
                 return he;
             he = he->next;
         }
+		// ±éÀúºó·¢ÏÖÎŞ´Ëkey£¬ÇÒµ±Ç°×ÖµäÎ´½øĞĞrehash²Ù×÷£¬ËµÃ÷È·ÊµÎŞ´Ëkey£¬·µ»ØNULL¡£
+		// ·ñÔòĞèÒª±éÀú×ÖµäµÄÁíÍâÒ»¸ötable£¬µ«ÊÇÎªÊ²Ã´Ã»ÓĞÖ±½Ó±éÀú·ÇrehashµÄtableÄØå
         if (!dictIsRehashing(d)) return NULL;
     }
     return NULL;

@@ -48,7 +48,7 @@ robj *lookupKey(redisDb *db, robj *key, int flags) {
     dictEntry *de = dictFind(db->dict,key->ptr);
     if (de) {
         robj *val = dictGetVal(de);
-
+		// 除非正在执行rdb或者aof命令，或者设置了LOOKUP_NOTOUCH，否则要更新对象的lru字段。
         /* Update the access time for the ageing algorithm.
          * Don't do it if we have a saving child, as this will trigger
          * a copy on write madness. */
@@ -64,6 +64,24 @@ robj *lookupKey(redisDb *db, robj *key, int flags) {
     }
 }
 
+/*
+    查询方法，如果查无此key，返回null。
+    在这个方法内，还会做三件事:
+    1. 检查一个key是否过期。
+    2. 更新最近访问时间。
+    3. 更新全局的健值访问的命中数/丢失数。
+
+    该方法仅用来查询，不应该用在写入操作前的查询上。
+
+    Flags参数:
+    LOOKUP_NONE: 未设置flags。
+    LOOKUP_NOTOUCH: 对当前key，不要更新最近访问时间。
+
+    注意:
+    对于一个过期的key，该方法都会返回NULL，不同的是:
+    1. 如果访问的是主节点，会删除该key；
+    2. 如果访问的是从节点，不会执行删除，等待同步主节点的删除命令时，再把该key删除。
+*/
 /* Lookup a key for read operations, or return NULL if the key is not found
  * in the specified DB.
  *
@@ -87,13 +105,20 @@ robj *lookupKey(redisDb *db, robj *key, int flags) {
  * expiring our key via DELs in the replication link. */
 robj *lookupKeyReadWithFlags(redisDb *db, robj *key, int flags) {
     robj *val;
-
+	// 首先检查key是否过期
     if (expireIfNeeded(db,key) == 1) {
         /* Key expired. If we are in the context of a master, expireIfNeeded()
          * returns 0 only when the key does not exist at all, so it's save
          * to return NULL ASAP. */
+         // key过期了，且是主节点，返回NULL；
         if (server.masterhost == NULL) return NULL;
 
+		/* 如果当前节点是从节点，expireIfNeeded()方法不会去尝试删除这个过期key,
+		   仅仅返回过期的状态，从节点的删除依赖同步主节点的删除命令，这样可以保持和主节点一致性。
+		   当然，在从节点执行查询命令，如果该请求不是主节点发起，且是只读的命令，
+		   也是会返回NULL，这也是为了提供多客户端访问过期key的一致性视图，
+		   
+		*/
         /* However if we are in the context of a slave, expireIfNeeded() will
          * not really try to expire the key, it only returns information
          * about the "logical" status of the key: key expiring is up to the
@@ -114,6 +139,7 @@ robj *lookupKeyReadWithFlags(redisDb *db, robj *key, int flags) {
             return NULL;
         }
     }
+	// 查询key，并更新访问计数
     val = lookupKey(db,key,flags);
     if (val == NULL)
         server.stat_keyspace_misses++;
@@ -138,6 +164,7 @@ robj *lookupKeyWrite(redisDb *db, robj *key) {
     return lookupKey(db,key,LOOKUP_NONE);
 }
 
+// 查询方法(如果查无此key，会直接把结果返回给客户端)
 robj *lookupKeyReadOrReply(client *c, robj *key, robj *reply) {
     robj *o = lookupKeyRead(c->db, key);
     if (!o) addReply(c,reply);
