@@ -154,16 +154,19 @@ void psetexCommand(client *c) {
     setGenericCommand(c,OBJ_SET_NO_FLAGS,c->argv[1],c->argv[3],c->argv[2],UNIT_MILLISECONDS,NULL,NULL);
 }
 
+// 统一的get命令执行方法
 int getGenericCommand(client *c) {
     robj *o;
-
+	// 如果查无此key，这里返回ok，查询方法内部已经把结果返回。
     if ((o = lookupKeyReadOrReply(c,c->argv[1],shared.nullbulk)) == NULL)
         return C_OK;
 
+	// 类型不是string，报错。
     if (o->type != OBJ_STRING) {
         addReply(c,shared.wrongtypeerr);
         return C_ERR;
     } else {
+    	// 把查询到的结果返回给客户端
         addReplyBulk(c,o);
         return C_OK;
     }
