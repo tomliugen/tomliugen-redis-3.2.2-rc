@@ -251,11 +251,16 @@ robj *dbRandomKey(redisDb *db) {
 
 /* Delete a key, value, and associated expiration entry if any, from the DB */
 int dbDelete(redisDb *db, robj *key) {
+	/*
+	  由于设置了过期时间的key会在redis内部保持两份，一个是正常的字典中，
+	  还有一份是在过期key的字典中，所以删除时，首先到过期key的字典中删除（删除引用），
+	  再到普通的字典中删除（释放空间），它们使用的是同一个方法dictDelete。
+	*/
     /* Deleting an entry from the expires dict will not free the sds of
      * the key, because it is shared with the main dictionary. */
     if (dictSize(db->expires) > 0) dictDelete(db->expires,key->ptr);
     if (dictDelete(db->dict,key->ptr) == DICT_OK) {
-        if (server.cluster_enabled) slotToKeyDel(key);
+        if (server.cluster_enabled) slotToKeyDel(key); // 如果启用了cluster，还需要到slot中删除该key。
         return 1;
     } else {
         return 0;
@@ -367,10 +372,10 @@ void flushallCommand(client *c) {
     }
     server.dirty++;
 }
-
+// 删除命令
 void delCommand(client *c) {
     int deleted = 0, j;
-
+	// 循环删除
     for (j = 1; j < c->argc; j++) {
         expireIfNeeded(c->db,c->argv[j]);
         if (dbDelete(c->db,c->argv[j])) {
@@ -381,6 +386,7 @@ void delCommand(client *c) {
             deleted++;
         }
     }
+	// 返回删除的个数
     addReplyLongLong(c,deleted);
 }
 

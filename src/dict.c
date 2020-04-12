@@ -424,14 +424,14 @@ static int dictGenericDelete(dict *d, const void *key, int nofree)
     int table;
 
     if (d->ht[0].size == 0) return DICT_ERR; /* d->ht[0].table is NULL */
-    if (dictIsRehashing(d)) _dictRehashStep(d);
+    if (dictIsRehashing(d)) _dictRehashStep(d); // 如果正在rehash，则执行一步rehash
     h = dictHashKey(d, key);
 
     for (table = 0; table <= 1; table++) {
         idx = h & d->ht[table].sizemask;
         he = d->ht[table].table[idx];
         prevHe = NULL;
-        while(he) {
+        while(he) { // 查询到key后，首先从哈希表中摘除，再释放空间
             if (key==he->key || dictCompareKeys(d, key, he->key)) {
                 /* Unlink the element from the list */
                 if (prevHe)
@@ -439,25 +439,26 @@ static int dictGenericDelete(dict *d, const void *key, int nofree)
                 else
                     d->ht[table].table[idx] = he->next;
                 if (!nofree) {
-                    dictFreeKey(d, he);
-                    dictFreeVal(d, he);
+                    dictFreeKey(d, he); // 释放key
+                    dictFreeVal(d, he); // 释放值
                 }
-                zfree(he);
+                zfree(he); // 释放链表节点本身的空间
                 d->ht[table].used--;
                 return DICT_OK;
             }
             prevHe = he;
             he = he->next;
         }
-        if (!dictIsRehashing(d)) break;
+        if (!dictIsRehashing(d)) break; // 如果当前字典正在rehash，则继续到下一个字典查询。
     }
     return DICT_ERR; /* not found */
 }
 
+// 删除并释放空间
 int dictDelete(dict *ht, const void *key) {
     return dictGenericDelete(ht,key,0);
 }
-
+// 仅删除，不释放空间，用于删除引用
 int dictDeleteNoFree(dict *ht, const void *key) {
     return dictGenericDelete(ht,key,1);
 }
