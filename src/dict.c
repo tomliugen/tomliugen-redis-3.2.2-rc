@@ -329,10 +329,11 @@ static void _dictRehashStep(dict *d) {
 /* Add an element to the target hash table */
 int dictAdd(dict *d, void *key, void *val)
 {
+	// 把key添加到字典中，返回新的entry
     dictEntry *entry = dictAddRaw(d,key);
 
     if (!entry) return DICT_ERR;
-    dictSetVal(d, entry, val);
+    dictSetVal(d, entry, val); // 对entry赋值
     return DICT_OK;
 }
 
@@ -359,11 +360,13 @@ dictEntry *dictAddRaw(dict *d, void *key)
 
     if (dictIsRehashing(d)) _dictRehashStep(d);
 
+    // 生成新对象添加的位置
     /* Get the index of the new element, or -1 if
      * the element already exists. */
     if ((index = _dictKeyIndex(d, key)) == -1)
         return NULL;
 
+    // 如果正在rehash，则把元素添加到的ht[1]中，否则添加到ht[0]
     /* Allocate the memory and store the new entry.
      * Insert the element in top, with the assumption that in a database
      * system it is more likely that recently added entries are accessed
@@ -374,6 +377,7 @@ dictEntry *dictAddRaw(dict *d, void *key)
     ht->table[index] = entry;
     ht->used++;
 
+    // 给新对象的key赋值
     /* Set the hash entry fields. */
     dictSetKey(d, entry, key);
     return entry;
@@ -399,8 +403,8 @@ int dictReplace(dict *d, void *key, void *val)
      * you want to increment (set), and then decrement (free), and not the
      * reverse. */
     auxentry = *entry;
-    dictSetVal(d, entry, val);
-    dictFreeVal(d, &auxentry);
+    dictSetVal(d, entry, val);  // 设置新值
+    dictFreeVal(d, &auxentry);  // 释放旧值
     return 0;
 }
 

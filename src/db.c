@@ -182,12 +182,12 @@ robj *lookupKeyWriteOrReply(client *c, robj *key, robj *reply) {
  *
  * The program is aborted if the key already exists. */
 void dbAdd(redisDb *db, robj *key, robj *val) {
-    sds copy = sdsdup(key->ptr);
-    int retval = dictAdd(db->dict, copy, val);
+    sds copy = sdsdup(key->ptr); // 创建并赋值给新的对象
+    int retval = dictAdd(db->dict, copy, val); // 添加到字典中
 
     serverAssertWithInfo(NULL,key,retval == DICT_OK);
-    if (val->type == OBJ_LIST) signalListAsReady(db, key);
-    if (server.cluster_enabled) slotToKeyAdd(key);
+    if (val->type == OBJ_LIST) signalListAsReady(db, key); // 如果对象是list类型，发出list有新数据的通知
+    if (server.cluster_enabled) slotToKeyAdd(key); // 更新slot数据
  }
 
 /* Overwrite an existing key with a new value. Incrementing the reference
@@ -197,7 +197,7 @@ void dbAdd(redisDb *db, robj *key, robj *val) {
  * The program is aborted if the key was not already present. */
 void dbOverwrite(redisDb *db, robj *key, robj *val) {
     dictEntry *de = dictFind(db->dict,key->ptr);
-
+	// 对旧元素的值覆盖
     serverAssertWithInfo(NULL,key,de != NULL);
     dictReplace(db->dict, key->ptr, val);
 }
@@ -210,12 +210,12 @@ void dbOverwrite(redisDb *db, robj *key, robj *val) {
  * 3) The expire time of the key is reset (the key is made persistent). */
 void setKey(redisDb *db, robj *key, robj *val) {
     if (lookupKeyWrite(db,key) == NULL) {
-        dbAdd(db,key,val);
+        dbAdd(db,key,val); // 添加新的对象
     } else {
-        dbOverwrite(db,key,val);
+        dbOverwrite(db,key,val); // 覆盖已有对象
     }
     incrRefCount(val);
-    removeExpire(db,key);
+    removeExpire(db,key); // 删除该key的过期时间属性
     signalModifiedKey(db,key);
 }
 
@@ -876,13 +876,14 @@ int removeExpire(redisDb *db, robj *key) {
     serverAssertWithInfo(NULL,key,dictFind(db->dict,key->ptr) != NULL);
     return dictDelete(db->expires,key->ptr) == DICT_OK;
 }
-
+// 设置过期时间
 void setExpire(redisDb *db, robj *key, long long when) {
     dictEntry *kde, *de;
 
     /* Reuse the sds from the main dict in the expire dict */
     kde = dictFind(db->dict,key->ptr);
     serverAssertWithInfo(NULL,key,kde != NULL);
+	// 把该对象的key指针添加到expires字典中，不拷贝value值
     de = dictReplaceRaw(db->expires,dictGetKey(kde));
     dictSetSignedIntegerVal(de,when);
 }

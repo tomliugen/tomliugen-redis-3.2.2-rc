@@ -1491,6 +1491,7 @@ void authCommand(client *c);
 void pingCommand(client *c);
 void echoCommand(client *c);
 void commandCommand(client *c);
+// set命令对应的接口
 void setCommand(client *c);
 void setnxCommand(client *c);
 void setexCommand(client *c);
