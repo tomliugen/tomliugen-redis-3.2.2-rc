@@ -1511,7 +1511,9 @@ void getrangeCommand(client *c);
 void incrCommand(client *c);
 // decr命令对应的接口
 void decrCommand(client *c);
+// 和incrCommand类似
 void incrbyCommand(client *c);
+// decrCommand
 void decrbyCommand(client *c);
 void incrbyfloatCommand(client *c);
 void selectCommand(client *c);
@@ -1527,6 +1529,7 @@ void shutdownCommand(client *c);
 void moveCommand(client *c);
 void renameCommand(client *c);
 void renamenxCommand(client *c);
+// lpush命令对应的接口
 void lpushCommand(client *c);
 void rpushCommand(client *c);
 void lpushxCommand(client *c);

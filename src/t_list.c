@@ -205,12 +205,13 @@ void pushGenericCommand(client *c, int where) {
 
     for (j = 2; j < c->argc; j++) {
         c->argv[j] = tryObjectEncoding(c->argv[j]);
-        if (!lobj) {
+        if (!lobj) {  // key不存在，则首先创建key对象并加入db中
             lobj = createQuicklistObject();
             quicklistSetOptions(lobj->ptr, server.list_max_ziplist_size,
                                 server.list_compress_depth);
             dbAdd(c->db,c->argv[1],lobj);
         }
+		// 加入list中
         listTypePush(lobj,c->argv[j],where);
         pushed++;
     }
