@@ -76,7 +76,7 @@ void setGenericCommand(client *c, int flags, robj *key, robj *val, robj *expire,
         }
         if (unit == UNIT_SECONDS) milliseconds *= 1000;
     }
-
+	// NX: 仅不存在时才设置，否则返回空；XX: 仅不存在时才设置，否则返回空
     if ((flags & OBJ_SET_NX && lookupKeyWrite(c->db,key) != NULL) ||
         (flags & OBJ_SET_XX && lookupKeyWrite(c->db,key) == NULL))
     {

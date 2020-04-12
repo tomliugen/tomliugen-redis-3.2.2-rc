@@ -1494,6 +1494,7 @@ void commandCommand(client *c);
 // set命令对应的接口
 void setCommand(client *c);
 void setnxCommand(client *c);
+// setex命令对应的接口
 void setexCommand(client *c);
 void psetexCommand(client *c);
 // get命令对应的接口
