@@ -341,15 +341,17 @@ void msetCommand(client *c) {
 void msetnxCommand(client *c) {
     msetGenericCommand(c,1);
 }
-
+// incr和decr命令执行方法，参数incr支持正数和负数
+// 如果对象已经存在，则在原值基础上修改；否则创建新对象，并把incr赋值给它。
 void incrDecrCommand(client *c, long long incr) {
     long long value, oldvalue;
     robj *o, *new;
 
     o = lookupKeyWrite(c->db,c->argv[1]);
     if (o != NULL && checkType(c,o,OBJ_STRING)) return;
-    if (getLongLongFromObjectOrReply(c,o,&value,NULL) != C_OK) return;
+    if (getLongLongFromObjectOrReply(c,o,&value,NULL) != C_OK) return; // 如果该对象的原值不是long long型，则执行失败。
 
+    // 检查修改后值的合法性
     oldvalue = value;
     if ((incr < 0 && oldvalue < 0 && incr < (LLONG_MIN-oldvalue)) ||
         (incr > 0 && oldvalue > 0 && incr > (LLONG_MAX-oldvalue))) {
@@ -358,6 +360,8 @@ void incrDecrCommand(client *c, long long incr) {
     }
     value += incr;
 
+    // 如果对象无其他引用且编码方式是INT,且value值不在0-10000范围内，则直接赋值，
+	// 否则需要创建一个新的对象再赋值。
     if (o && o->refcount == 1 && o->encoding == OBJ_ENCODING_INT &&
         (value < 0 || value >= OBJ_SHARED_INTEGERS) &&
         value >= LONG_MIN && value <= LONG_MAX)
@@ -365,6 +369,7 @@ void incrDecrCommand(client *c, long long incr) {
         new = o;
         o->ptr = (void*)((long)value);
     } else {
+		// 创建新的对象，如果value值在0-10000内，会使用共享的INT对象，以节省空间
         new = createStringObjectFromLongLong(value);
         if (o) {
             dbOverwrite(c->db,c->argv[1],new);

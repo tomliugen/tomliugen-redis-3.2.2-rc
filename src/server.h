@@ -1507,7 +1507,9 @@ void getbitCommand(client *c);
 void bitfieldCommand(client *c);
 void setrangeCommand(client *c);
 void getrangeCommand(client *c);
+// incr命令对应的接口
 void incrCommand(client *c);
+// decr命令对应的接口
 void decrCommand(client *c);
 void incrbyCommand(client *c);
 void decrbyCommand(client *c);
