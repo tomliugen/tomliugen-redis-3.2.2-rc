@@ -233,6 +233,12 @@ int dictExpand(dict *d, unsigned long size)
     return DICT_OK;
 }
 
+/* 渐进式重新哈希方法，把旧哈希表（ht[0]）中的数据分步迁移到新的哈希表（ht[1]）中，
+   通过参数N控制每次移动多少个bucket，重新哈希结束时，ht[0]再指向新表，ht[1]则置空。
+   本次移动结束时，如果还有数据需要移动，则返回1，否则返回0。
+   注意：由于哈希表中有一些空的bucket，因此本方法会最多访问N*10个空bucket，
+   直至有可以移动的bucket。
+*/
 /* Performs N steps of incremental rehashing. Returns 1 if there are still
  * keys to move from the old to the new hash table, otherwise 0 is returned.
  *
@@ -270,10 +276,12 @@ int dictRehash(dict *d, int n) {
             d->ht[1].used++;
             de = nextde;
         }
+		// 迁移成功后，会把原哈希表中的元素置空。
         d->ht[0].table[d->rehashidx] = NULL;
         d->rehashidx++;
     }
 
+    // 如果重新哈希结束，则ht[1]赋值给ht[0]，ht[1]置空
     /* Check if we already rehashed the whole table... */
     if (d->ht[0].used == 0) {
         zfree(d->ht[0].table);
@@ -495,6 +503,7 @@ dictEntry *dictFind(dict *d, const void *key)
     unsigned int h, idx, table;
 
     if (d->ht[0].used + d->ht[1].used == 0) return NULL; /* dict is empty */
+	// 渐进式哈希，每次只做一步，减少对redis性能的影响
     if (dictIsRehashing(d)) _dictRehashStep(d);
 	// 计算hash值
     h = dictHashKey(d, key);
@@ -511,7 +520,8 @@ dictEntry *dictFind(dict *d, const void *key)
             he = he->next;
         }
 		// 遍历后发现无此key，且当前字典未进行rehash操作，说明确实无此key，返回NULL。
-		// 否则需要遍历字典的另外一个table，但是为什么没有直接遍历非rehash的table呢?        if (!dictIsRehashing(d)) return NULL;
+		// 否则需要遍历字典的另外一个哈希表，以遍历重新哈希过程中迁移走的key。      
+		if (!dictIsRehashing(d)) return NULL;
     }
     return NULL;
 }

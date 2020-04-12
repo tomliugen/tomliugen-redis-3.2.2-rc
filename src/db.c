@@ -920,6 +920,11 @@ void propagateExpire(redisDb *db, robj *key) {
     decrRefCount(argv[1]);
 }
 
+/*
+  检查该key是否已经过期：
+  1. 如果是从节点，只返回是否过期的状态，不删除数据。
+  2. 如果是主节点，在过期的时候，会删除key。
+*/
 int expireIfNeeded(redisDb *db, robj *key) {
     mstime_t when = getExpire(db,key);
     mstime_t now;
