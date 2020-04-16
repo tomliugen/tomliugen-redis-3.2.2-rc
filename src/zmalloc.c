@@ -148,7 +148,9 @@ void *zcalloc(size_t size) {
     return (char*)ptr+PREFIX_SIZE;
 #endif
 }
-
+/*
+先判断当前的指针是否有足够的连续空间，如果有，扩大ptr指向的地址，并且将ptr返回，如果空间不够，先按照size指定的大小分配空间，将原有数据从头到尾拷贝到新分配的内存区域，而后释放原来ptr所指内存区域（注意：原来指针是自动释放，不需要使用free），同时返回新分配的内存区域的首地址。即重新分配存储器块的地址。
+*/
 void *zrealloc(void *ptr, size_t size) {
 #ifndef HAVE_MALLOC_SIZE
     void *realptr;
