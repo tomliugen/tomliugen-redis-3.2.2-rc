@@ -40,7 +40,18 @@
  * container: 2 bits, NONE=1, ZIPLIST=2.
  * recompress: 1 bit, bool, true if node is temporarry decompressed for usage.
  * attempted_compress: 1 bit, boolean, used for verifying during testing.
- * extra: 12 bits, free for future use; pads out the remainder of 32 bits */
+ * extra: 12 bits, free for future use; pads out the remainder of 32 bits 
+ prev: 指向前一个quicklistNode。
+ next: 指向下一个quicklistNode。
+ zl: 指向当前节点的ziplist。
+ sz：ziplist占用空间的字节数。
+ count: ziplist中元素个数。
+ encoding：编码类型，RAW==1 or LZF==2。
+ container：容器类型，NONE==1 or ZIPLIST==2
+ recompress：bool类型，true表示该节点数据临时被解压了。
+ attempted_compress： bool类型，用于测试阶段。
+ extra： 填充字典，将来可能会用到。
+ */
 typedef struct quicklistNode {
     struct quicklistNode *prev;
     struct quicklistNode *next;
@@ -69,7 +80,15 @@ typedef struct quicklistLZF {
  * 'len' is the number of quicklist nodes.
  * 'compress' is: -1 if compression disabled, otherwise it's the number
  *                of quicklistNodes to leave uncompressed at ends of quicklist.
- * 'fill' is the user-requested (or default) fill factor. */
+ * 'fill' is the user-requested (or default) fill factor. 
+   quicklist结构占用32个字节（64位系统），其中字段：
+   head：指向第一个quicklistNode。
+   tail：指向最后一个quicklistNode。
+   count：在所有ziplist中entry的个数总和。
+   len：quicklistNode的个数。
+   fill：ziplist大小限定，由server.list_max_ziplist_size给定。
+   compress：节点压缩深度设置，由server.list-compress-depth给定，0表示关闭压缩。
+ */
 typedef struct quicklist {
     quicklistNode *head;
     quicklistNode *tail;

@@ -610,7 +610,8 @@ static unsigned char *__ziplistInsert(unsigned char *zl, unsigned char *p, unsig
     }
 
     /* See if the entry can be encoded */
-	// 检查entry是否可以编码
+	// 检查entry的value是否可以编码为long long类型，如果可以就把值保存在value中，
+	// 并把所需最小字节长度保存在encoding
     if (zipTryEncoding(s,slen,&value,&encoding)) {
         /* 'encoding' is set to the appropriate integer encoding */
         reqlen = zipIntSize(encoding);
