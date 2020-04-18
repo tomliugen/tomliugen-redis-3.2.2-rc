@@ -42,9 +42,9 @@ void listTypePush(robj *subject, robj *value, int where) {
     if (subject->encoding == OBJ_ENCODING_QUICKLIST) {
         int pos = (where == LIST_HEAD) ? QUICKLIST_HEAD : QUICKLIST_TAIL;
         value = getDecodedObject(value);
-        size_t len = sdslen(value->ptr);
-        quicklistPush(subject->ptr, value->ptr, len, pos);
-        decrRefCount(value);
+        size_t len = sdslen(value->ptr);// 计算新元素长度
+        quicklistPush(subject->ptr, value->ptr, len, pos); // 加入到quicklist
+        decrRefCount(value); 
     } else {
         serverPanic("Unknown list encoding");
     }
@@ -206,10 +206,10 @@ void pushGenericCommand(client *c, int where) {
     for (j = 2; j < c->argc; j++) {
         c->argv[j] = tryObjectEncoding(c->argv[j]);
         if (!lobj) {  // key不存在，则首先创建key对象并加入db中
-            lobj = createQuicklistObject();
+            lobj = createQuicklistObject(); // 初始化quicklist对象
             quicklistSetOptions(lobj->ptr, server.list_max_ziplist_size,
-                                server.list_compress_depth);
-            dbAdd(c->db,c->argv[1],lobj);
+                                server.list_compress_depth); // 使用redis server的配置项做初始化
+            dbAdd(c->db,c->argv[1],lobj); // 把quicklist添加到redis db中
         }
 		// 加入list中
         listTypePush(lobj,c->argv[j],where);

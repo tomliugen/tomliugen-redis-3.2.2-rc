@@ -476,19 +476,26 @@ REDIS_STATIC int _quicklistNodeAllowMerge(const quicklistNode *a,
 /* Add new entry to head node of quicklist.
  *
  * Returns 0 if used existing head.
- * Returns 1 if new head created. */
+ * Returns 1 if new head created. 
+ 在quicklist的头部节点添加新元素：
+ 如果新元素添加在head中，返回0，否则返回1.
+ */
 int quicklistPushHead(quicklist *quicklist, void *value, size_t sz) {
     quicklistNode *orig_head = quicklist->head;
+	// 如果head不为空，且空间大小满足新元素的存储要求，则新元素添加到head中，否则新加一个quicklistNode
     if (likely(
             _quicklistNodeAllowInsert(quicklist->head, quicklist->fill, sz))) {
         quicklist->head->zl =
             ziplistPush(quicklist->head->zl, value, sz, ZIPLIST_HEAD);
         quicklistNodeUpdateSz(quicklist->head);
     } else {
+		// 创建新的quicklistNode
         quicklistNode *node = quicklistCreateNode();
+		// 把新元素添加到新建的ziplist中
         node->zl = ziplistPush(ziplistNew(), value, sz, ZIPLIST_HEAD);
-
+		// 更新ziplist的长度到quicklistNode的sz字段
         quicklistNodeUpdateSz(node);
+		// 把新node添加到quicklist中，即添加到原head前面
         _quicklistInsertNodeBefore(quicklist, quicklist->head, node);
     }
     quicklist->count++;
@@ -609,7 +616,13 @@ REDIS_STATIC void __quicklistDelNode(quicklist *quicklist,
  *       already had to get *p from an uncompressed node somewhere.
  *
  * Returns 1 if the entire node was deleted, 0 if node still exists.
- * Also updates in/out param 'p' with the next offset in the ziplist. */
+ * Also updates in/out param 'p' with the next offset in the ziplist. 
+ 从quicklistNode中删除一个entry：
+ 1. 从ziplist中删除entry。
+ 2. quicklistNode中的entry个数减1：
+    如果quicklistNode中entry个数为0，则从quicklist中删除当前的quicklistNode。
+    否则，更新quicklistNode中的sz字段。
+ */
 REDIS_STATIC int quicklistDelIndex(quicklist *quicklist, quicklistNode *node,
                                    unsigned char **p) {
     int gone = 0;
@@ -1320,7 +1333,12 @@ void quicklistRotate(quicklist *quicklist) {
  *
  * Return value of 0 means no elements available.
  * Return value of 1 means check 'data' and 'sval' for values.
- * If 'data' is set, use 'data' and 'sz'.  Otherwise, use 'sval'. */
+ * If 'data' is set, use 'data' and 'sz'.  Otherwise, use 'sval'. 
+ 如果quicklist中无元素，返回0，否则返回1.
+ 当返回1时，需要检查data和sval两个字段：
+ 1. 如果是string类型，则把结果地址保存在data指针中，长度保存在sz。
+ 2. 如果是long long类型，则把值保存在sval字段中。
+ */
 int quicklistPopCustom(quicklist *quicklist, int where, unsigned char **data,
                        unsigned int *sz, long long *sval,
                        void *(*saver)(unsigned char *data, unsigned int sz)) {
@@ -1348,7 +1366,7 @@ int quicklistPopCustom(quicklist *quicklist, int where, unsigned char **data,
     } else {
         return 0;
     }
-
+    // p: 0 取ziplist的第一个元素； -1 取ziplist的最后一个元素；
     p = ziplistIndex(node->zl, pos);
     if (ziplistGet(p, &vstr, &vlen, &vlong)) {
         if (vstr) {
@@ -1362,6 +1380,7 @@ int quicklistPopCustom(quicklist *quicklist, int where, unsigned char **data,
             if (sval)
                 *sval = vlong;
         }
+		// 从quicklist中删除该元素
         quicklistDelIndex(quicklist, node, &p);
         return 1;
     }
@@ -1389,6 +1408,7 @@ int quicklistPop(quicklist *quicklist, int where, unsigned char **data,
     long long vlong;
     if (quicklist->count == 0)
         return 0;
+	// pop一个元素
     int ret = quicklistPopCustom(quicklist, where, &vstr, &vlen, &vlong,
                                  _quicklistSaver);
     if (data)
@@ -1403,9 +1423,9 @@ int quicklistPop(quicklist *quicklist, int where, unsigned char **data,
 /* Wrapper to allow argument-based switching between HEAD/TAIL pop */
 void quicklistPush(quicklist *quicklist, void *value, const size_t sz,
                    int where) {
-    if (where == QUICKLIST_HEAD) {
+    if (where == QUICKLIST_HEAD) {  // 添加到list头部
         quicklistPushHead(quicklist, value, sz);
-    } else if (where == QUICKLIST_TAIL) {
+    } else if (where == QUICKLIST_TAIL) {  // 添加到list尾部
         quicklistPushTail(quicklist, value, sz);
     }
 }
