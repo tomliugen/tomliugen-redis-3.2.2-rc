@@ -194,7 +194,12 @@ static unsigned int zipIntSize(unsigned char encoding) {
 }
 
 /* Encode the length 'rawlen' writing it in 'p'. If p is NULL it just returns
- * the amount of bytes required to encode such a length. */
+ * the amount of bytes required to encode such a length. 
+ 本方法对encoding是String类型时，进行编码并赋值（如果entry内容可以转化为long long类型，在zipTryEncoding方法中进行编码），并根据不同长度的字符串来编码encoding的值，具体如下：
+    a. 0X00xxxxxx 前两位00表示最大长度为63的字符串，后面6位表示实际字符串长度，encoding占用1个字节。
+	b. 0X01xxxxxx xxxxxxxx 前两位01表示中等长度的字符串（大于63小于等于16383），后面14位表示实际长度，encoding占用两个字节。
+	c. OX10000000 xxxxxxxx xxxxxxxx xxxxxxxx 表示特大字符串，第一个字节固定128(0X80)，后面四个字节存储实际长度，encoding占用5个字节。
+ */
 static unsigned int zipEncodeLength(unsigned char *p, unsigned char encoding, unsigned int rawlen) {
     unsigned char len = 1, buf[5];
 
@@ -261,7 +266,7 @@ static unsigned int zipEncodeLength(unsigned char *p, unsigned char encoding, un
  * number of bytes needed to encode this length if "p" is NULL. 
    把前一个entry的长度编码后写入当前entry的prevLen字段，编码规则：
    1. 如果len<254，prevLen占用一个字节，并写入当前entry的第一个字节。
-   2. 如果len>=254，prevLen占用五个字节，第一个字节固定写入254，第二个和第五个字节写入实际的长度。
+   2. 如果len>=254，prevLen占用五个字节，第一个字节固定写入254，第二个至第五个字节写入实际的长度。
  */
 static unsigned int zipPrevEncodeLength(unsigned char *p, unsigned int len) {
     if (p == NULL) { // 此时只是计算len所需的存储长度
@@ -328,7 +333,16 @@ static unsigned int zipRawEntryLength(unsigned char *p) {
 }
 
 /* Check if string pointed to by 'entry' can be encoded as an integer.
- * Stores the integer value in 'v' and its encoding in 'encoding'. */
+ * Stores the integer value in 'v' and its encoding in 'encoding'. 
+ 当存储内容可以转化为long long类型时，encoding占用一个字节，其中前2位固定都是1，后面6位根据value值大小不同，具体如下：
+    a. OX11000000 表示content内容是int16，长度是2个字节。
+	b. OX11010000 表示content内容是int32，长度是4个字节。
+	c. OX11100000 表示content内容是int64，长度是8个字节。
+	d. OX11110000 表示content内容是int24，长度是3个字节。
+	e. OX11111110 表示content内容是int8，长度是1个字节。
+	f. OX11111111 表示ziplist的结束。
+	g. 0X1111xxxx 表示极小数，存储0-12的值，由于0000和1111都不能使用，所以它的实际值将是1至13，程序在取得这4位的值之后，还需要减去1，才能计算出正确的值，比如说，如果后4位为0001 = 1，那么程序返回的值将是1-1=0。
+ */
 static int zipTryEncoding(unsigned char *entry, unsigned int entrylen, long long *v, unsigned char *encoding) {
     long long value;
 
