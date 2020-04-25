@@ -44,17 +44,20 @@
 /* Unused arguments generate annoying warnings... */
 #define DICT_NOTUSED(V) ((void) V)
 
+// 字典元素
 typedef struct dictEntry {
-    void *key;
-    union {
+    void *key; // key
+    union {  // value联合体
         void *val;
         uint64_t u64;
         int64_t s64;
         double d;
     } v;
-    struct dictEntry *next;
+    struct dictEntry *next; // 下一个字典元素
 } dictEntry;
 
+// 字典type，定义某种类型的操作方法集，包含key拷贝、value拷贝、key比较、key析构、value析构
+// 具体类型定义在server.c中，包含set、list、zset、lua脚本、字典元素等。
 typedef struct dictType {
     unsigned int (*hashFunction)(const void *key);
     void *(*keyDup)(void *privdata, const void *key);
@@ -66,18 +69,23 @@ typedef struct dictType {
 
 /* This is our hash table structure. Every dictionary has two of this as we
  * implement incremental rehashing, for the old to the new table. */
+
 typedef struct dictht {
     dictEntry **table;
-    unsigned long size;
+    unsigned long size;  // hash表中bucket个数。
     unsigned long sizemask;
-    unsigned long used;
+    unsigned long used;  // hash表中元素个数.
 } dictht;
 
+// 
+ // 字典结构，每个字典包含2个dictht，平时使用ht[0]存放元素。
+ // 如果ht[0]需要扩缩容时，会使用渐进式迁移策略，将ht[0]分批迁移到ht[1]中，
+ // 迁移结束时，再把ht[1]赋值给ht[0]，并把ht[1]置空。
 typedef struct dict {
     dictType *type;
     void *privdata;
     dictht ht[2];
-    long rehashidx; /* rehashing not in progress if rehashidx == -1 */
+    long rehashidx; /* 在扩容容过程中，记录已经迁移走的bucket的索引值，-1表示不在扩缩容过程 */
     int iterators; /* number of iterators currently running */
 } dict;
 
