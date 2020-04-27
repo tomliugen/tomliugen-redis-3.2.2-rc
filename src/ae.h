@@ -63,19 +63,19 @@ typedef void aeBeforeSleepProc(struct aeEventLoop *eventLoop);
 
 /* File event structure */
 typedef struct aeFileEvent {
-    int mask; /* one of AE_(READABLE|WRITABLE) */
-    aeFileProc *rfileProc;
-    aeFileProc *wfileProc;
+    int mask; /* 读/写事件的标志位one of AE_(READABLE|WRITABLE) */
+    aeFileProc *rfileProc;  // 处理文件读事件
+    aeFileProc *wfileProc;  // 处理文件写事件
     void *clientData;
 } aeFileEvent;
 
 /* Time event structure */
 typedef struct aeTimeEvent {
-    long long id; /* time event identifier. */
-    long when_sec; /* seconds */
-    long when_ms; /* milliseconds */
-    aeTimeProc *timeProc;
-    aeEventFinalizerProc *finalizerProc;
+    long long id; /* time event identifier. 时间事件id */
+    long when_sec; /* seconds 触发时间的秒数*/
+    long when_ms; /* milliseconds 触发时间的毫秒数*/
+    aeTimeProc *timeProc;  // 时间事件处理方法
+    aeEventFinalizerProc *finalizerProc;  // 事件终结方法
     void *clientData;
     struct aeTimeEvent *next;
 } aeTimeEvent;
