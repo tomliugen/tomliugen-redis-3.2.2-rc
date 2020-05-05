@@ -80,7 +80,9 @@ typedef struct aeTimeEvent {
     struct aeTimeEvent *next;
 } aeTimeEvent;
 
-/* A fired event */
+/* A fired event 
+  激发的事件，即有可读/可写的事件，同时记录了对应的fd和mask（事件类型）
+*/
 typedef struct aeFiredEvent {
     int fd;
     int mask;
@@ -89,11 +91,12 @@ typedef struct aeFiredEvent {
 /* State of an event based program */
 typedef struct aeEventLoop {
     int maxfd;   /* highest file descriptor currently registered */
-    int setsize; /* max number of file descriptors tracked */
+    int setsize; /* max number of file descriptors tracked
+	             当前系统的最大文件描述符限制数（ulimit命令）+128*/
     long long timeEventNextId;
     time_t lastTime;     /* Used to detect system clock skew */
-    aeFileEvent *events; /* Registered events */
-    aeFiredEvent *fired; /* Fired events */
+    aeFileEvent *events; /* Registered events 监控的事件列表 */
+    aeFiredEvent *fired; /* Fired events 激发的事件列表*/
     aeTimeEvent *timeEventHead;
     int stop;
     void *apidata; /* This is used for polling API specific data */

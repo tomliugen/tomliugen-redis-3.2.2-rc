@@ -60,6 +60,11 @@
     #endif
 #endif
 
+/*
+在本方法中会创建两个event list：eventLoop->events和eventLoop->fired，大小都是setsize。
+其中setsize = 系统ulimit+128，ulimit默认是1024，一般的服务器会设置大一些，但通常不超过10w。
+sizeof(aeFileEvent)+sizeof(aeFiredEvent) = 36，以setsize为10w举例，这两个event list占用存储空间是36*10w = 360w，约等于3M多的内存，对于redis而言，占用3M多的空间，带来的是查询效率变为了O(1)，对于这种高并发的服务器，是非常划算的。
+*/
 aeEventLoop *aeCreateEventLoop(int setsize) {
     aeEventLoop *eventLoop;
     int i;
