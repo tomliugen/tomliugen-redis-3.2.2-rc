@@ -70,6 +70,7 @@ static void aeApiFree(aeEventLoop *eventLoop) {
     zfree(state);
 }
 
+/* 把fd加入到epoll监控中 */
 static int aeApiAddEvent(aeEventLoop *eventLoop, int fd, int mask) {
     aeApiState *state = eventLoop->apidata;
     struct epoll_event ee = {0}; /* avoid valgrind warning */
@@ -104,7 +105,9 @@ static void aeApiDelEvent(aeEventLoop *eventLoop, int fd, int delmask) {
         epoll_ctl(state->epfd,EPOLL_CTL_DEL,fd,&ee);
     }
 }
-
+/* 执行一次epoll wait方法，tvp是超时参数，如果tvp为null，则超时时间设置为无限长。
+epoll_wait方法返回时，如果retval大于0，说明有I/O事件；否则是超时了。
+*/
 static int aeApiPoll(aeEventLoop *eventLoop, struct timeval *tvp) {
     aeApiState *state = eventLoop->apidata;
     int retval, numevents = 0;
