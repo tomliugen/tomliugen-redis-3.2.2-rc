@@ -137,6 +137,7 @@ void aeStop(aeEventLoop *eventLoop) {
     eventLoop->stop = 1;
 }
 
+/* 添加一个文件事件 */
 int aeCreateFileEvent(aeEventLoop *eventLoop, int fd, int mask,
         aeFileProc *proc, void *clientData)
 {
@@ -156,7 +157,7 @@ int aeCreateFileEvent(aeEventLoop *eventLoop, int fd, int mask,
         eventLoop->maxfd = fd;
     return AE_OK;
 }
-
+/* 删除一个文件事件 */
 void aeDeleteFileEvent(aeEventLoop *eventLoop, int fd, int mask)
 {
     if (fd >= eventLoop->setsize) return;
@@ -174,7 +175,7 @@ void aeDeleteFileEvent(aeEventLoop *eventLoop, int fd, int mask)
         eventLoop->maxfd = j;
     }
 }
-
+/* 返回文件事件的mask值 */
 int aeGetFileEvents(aeEventLoop *eventLoop, int fd) {
     if (fd >= eventLoop->setsize) return 0;
     aeFileEvent *fe = &eventLoop->events[fd];
@@ -182,6 +183,7 @@ int aeGetFileEvents(aeEventLoop *eventLoop, int fd) {
     return fe->mask;
 }
 
+/* 获取当前系统的时间值 */
 static void aeGetTime(long *seconds, long *milliseconds)
 {
     struct timeval tv;
@@ -205,6 +207,7 @@ static void aeAddMillisecondsToNow(long long milliseconds, long *sec, long *ms) 
     *ms = when_ms;
 }
 
+/* 添加一个时间事件 */
 long long aeCreateTimeEvent(aeEventLoop *eventLoop, long long milliseconds,
         aeTimeProc *proc, void *clientData,
         aeEventFinalizerProc *finalizerProc)
@@ -223,7 +226,7 @@ long long aeCreateTimeEvent(aeEventLoop *eventLoop, long long milliseconds,
     eventLoop->timeEventHead = te;
     return id;
 }
-
+/* 删除一个时间事件 */
 int aeDeleteTimeEvent(aeEventLoop *eventLoop, long long id)
 {
     aeTimeEvent *te = eventLoop->timeEventHead;
